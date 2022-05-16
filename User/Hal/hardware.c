@@ -24,8 +24,8 @@ void Clk_Init(void )
     //HOCO = 32MHz / fIH = 8MHz, UPLL = 48MHz, fclk = 64MHz
     
     CLK_Fclk_Select(MAINCLK_FIH);
-    CLK_PLL_Setting(PLL_SR_fMX,PLL_DIV_2,PLL_MUL_16);
-    CLK_UPLL_Setting(PLL_SR_fMX,PLL_DIV_2,PLL_MUL_12);
+    CLK_PLL_Setting(PLL_SR_fIH,PLL_DIV_2,PLL_MUL_16);
+    CLK_UPLL_Setting(PLL_SR_fIH,PLL_DIV_2,PLL_MUL_12);
     CLK_PLL_Start();
     waitCnt = 10000;
     while(waitCnt--);
@@ -33,12 +33,23 @@ void Clk_Init(void )
     waitCnt = 10000;
     while(waitCnt--);
     CLK_Fclk_Select(MAINCLK_FPLL);
+
+    SystemCoreClock = 64000000;
+}
+
+void Gpio_Led_Init(void )
+{
+    //LED TEST1:
+    PORT_Init(PORTD, PIN6, OUTPUT);
+    PORT_Init(PORTD, PIN7, OUTPUT);
+    PORT_Init(PORTD, PIN8, OUTPUT);
+    PORT_Init(PORTD, PIN9, OUTPUT);
+    PORT_Init(PORTD, PIN10, OUTPUT);
+    PORT_Init(PORTD, PIN11, OUTPUT);
 }
 
 void Tim4_Channel0_Init(void )
-{
-    SystemCoreClockUpdate();
-    
+{    
     CGC->PER0 |= CGC_PER0_TM40EN_Msk;    /* enables input clock supply */
     TM40->TPS0 = _0000_TM4_CKM3_fCLK_8 | _0000_TM4_CKM2_fCLK_1 | _00F0_TM4_CKM1_fCLK_15 | _0000_TM4_CKM0_fCLK_0; 
 

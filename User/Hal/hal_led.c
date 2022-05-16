@@ -1,5 +1,5 @@
 /********************************************************
-* @file       hardware.c
+* @file       hal_led.c
 * @author     szhj13
 * @version    V1.0
 * @date       2022-05-18
@@ -10,35 +10,37 @@
 **********************************************************/
 
 /* Includes ---------------------------------------------*/
-#include "hardware.h"
-#include "drv_timer.h"
-
-#include "app_lcd.h"
-#include "app_led.h"
+#include "hal_led.h"
 /* Private typedef --------------------------------------*/
 /* Private define ---------------------------------------*/
 /* Private macro ----------------------------------------*/
-/* Private function -------------------------------------*/
 /* Private variables ------------------------------------*/
 
-int main (void)
+void Hal_Led_Init(void )
 {
-    Clk_Init();
-    
-    Drv_Timer_Init();
+    Gpio_Led_Init();   
+}
 
-    Drv_Flash_Init();
+void Hal_Led_Set_Off(uint8_t port, uint8_t pin )
+{
+    PORT_SetBit((PORT_TypeDef)port, (PIN_TypeDef)pin);
+}
 
-    App_Lcd_Init();
+void Hal_Led_Set_On(uint8_t port, uint8_t pin )
+{
+    PORT_ClrBit((PORT_TypeDef)port, (PIN_TypeDef)pin);
+}
 
-    App_Led_Init();
-
-    Usb_Init(); 
-
-    while(1)
+uint8_t Hal_Led_Get_State(uint8_t port, uint8_t pin )
+{
+    if(PORT_GetBit((PORT_TypeDef )port, (PIN_TypeDef )pin ))
     {
-        App_Lcd_Handler();
+        return LED_OFF;
     }
-} 
+    else
+    {
+        return LED_ON;
+    }
+}
 
 

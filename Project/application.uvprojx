@@ -300,7 +300,7 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
+                <StartAddress>0x200002c0</StartAddress>
                 <Size>0x8000</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
@@ -387,6 +387,21 @@
               <FileName>clk.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Driver\src\clk.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\src\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\src\dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\src\spi.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -563,6 +578,16 @@
               <FileType>1</FileType>
               <FilePath>..\User\App\usb_phid_keyboard_apl.c</FilePath>
             </File>
+            <File>
+              <FileName>app_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\App\app_led.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\App\app_lcd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -572,6 +597,21 @@
               <FileName>drv_timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\Drv\drv_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Drv\drv_led.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Drv\drv_lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Drv\drv_flash.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -587,6 +627,21 @@
               <FileName>interrupt.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\Hal\interrupt.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Hal\hal_led.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Hal\hal_lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Hal\hal_flash.c</FilePath>
             </File>
           </Files>
         </Group>

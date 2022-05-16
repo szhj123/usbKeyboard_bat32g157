@@ -64,6 +64,7 @@ usb_err_t    ret_code = USB_SUCCESS;
   * Arguments    : none
   * Return Value : none
  ******************************************************************************/
+
 void Usb_Init (void)
 {
     ctrl.type       = USB_PHID;
