@@ -18,86 +18,254 @@
 /* Private function -------------------------------------*/
 
 /* Private variables ------------------------------------*/
-static flash_id_t flash_id;
+
 
 void Drv_Flash_Init(void )
 {
-    Hal_Spi_Init();
-
-    Drv_Spi_Read_Jedec_Id();
-
-    //Drv_Spi_Sector_Erase(0);
+    SPI1_MasterInit(SPI_MODE_0);
+	SPI1_Start();
 }
-
-void Drv_Spi_Read_Jedec_Id(void )
-{    
-    uint8_t dummy[3] = {0x00};
-    
-    Hal_Spi_Start();
-
-    Hal_Spi_Tx_Single_With_Blocking(READ_JEDEC_ID);
-
-    Hal_Spi_Rx_Multiple_With_Block((uint8_t *)&flash_id, sizeof(flash_id_t));
-
-    Hal_Spi_Stop();
-}
-
-void Drv_Spi_Sector_Erase(uint32_t addr )
+/***********************************************************************************************************************
+* Function Name: SPI21_Send
+* Description  : This function sends SPI21 data.
+* Arguments    : ch -
+*                    transfer char
+* Return Value : receive data
+***********************************************************************************************************************/
+uint8_t SPIHS1_Send(uint8_t ch)
 {
-    Drv_Spi_Write_Enable();
-
-    Hal_Spi_Start();
-    
-    Hal_Spi_Tx_Single_With_Blocking(SECTOR_ERASE);
-
-    Hal_Spi_Tx_Single_With_Blocking((uint8_t )(addr >> 16));
-    Hal_Spi_Tx_Single_With_Blocking((uint8_t )(addr >> 8));
-    Hal_Spi_Tx_Single_With_Blocking((uint8_t )(addr));
-
-    Hal_Spi_Stop();
-
-    Drv_Spi_Wait_Bus_Idle();
+    SPIHS1->SDRO1 = ch;
+	while(!INTC_GetPendingIRQ(SPI1_IRQn));
+	INTC_ClearPendingIRQ(SPI1_IRQn);
+    return SPIHS1->SDRI1;
 }
 
-void Drv_Spi_Write_Enable(void )
+/**
+  * @brief  Read SPI flash manufacturer ID and device ID.
+  * @param  spi is the base address of SPI module.
+  * @return High byte is manufacturer ID; low byte is device ID.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+uint32_t SpiFlash_ReadMidDid(void)
 {
-    Hal_Spi_Start();
+    uint32_t u32MID_DID;
 
-    Hal_Spi_Tx_Single_With_Blocking(WRITE_ENABLE);
+    /* /CS: active */
+    SPI_CS_LOW();
 
-    Hal_Spi_Stop();
-
-    Drv_Spi_Wait_Bus_Idle();
-}
-
-uint8_t Drv_Spi_Read_Status(void )
-{
-    uint8_t status[2] = {0};
+    /* Send command 0x90: Read Manufacturer/Device ID */
+    SPIHS1_Send(0x90);
+    /* Send 24 '0' dummy bits */
+    SPIHS1_Send(0x00);
+    SPIHS1_Send(0x00);
+    SPIHS1_Send(0x00);
     
-    Hal_Spi_Tx_Single_With_Blocking(READ_STATUS_REGISTER);
-
-    Hal_Spi_Rx_Multiple_With_Block((uint8_t *)status, 2);
-
-    return status[0];
-}
-
-void Drv_Spi_Wait_Bus_Idle(void )
-{
-    uint8_t status;
+    /* Get the MID & DID */
     
-    Hal_Spi_Start();
+    u32MID_DID = SPIHS1_Send(0x00)<<8;
+    u32MID_DID |= SPIHS1_Send(0x00);
 
-    do{
-        status = Drv_Spi_Read_Status();
-    }while(status & 0x01);
+    /* /CS: inactive */
+    SPI_CS_HIGH();
 
-    Hal_Spi_Stop();
+    return u32MID_DID;
 }
 
 
+/**
+  * @brief  Erase whole SPI flash memory.
+  * @param  spi is the base address of SPI module.
+  * @return None.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+void SpiFlash_ChipErase(void)
+{
 
+    /* /CS: active */
+    SPI_CS_LOW();
 
+    /* Send command 0x06: Write enable */
+    SPIHS1_Send(0x06);
+    
+    /* /CS: inactive */
+    SPI_CS_HIGH();
 
+    __NOP();
 
+    /* /CS: active */
+    SPI_CS_LOW();
 
+    /* Send command 0xC7: Chip erase */
+    SPIHS1_Send(0xc7);
+    
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+
+    /* Clear RX FIFO */
+    
+}
+
+/**
+  * @brief  Read SPI flash status register.
+  * @param  spi is the base address of SPI module.
+  * @return Status register value.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+uint8_t SpiFlash_ReadStatusReg(void)
+{
+    uint8_t sta;
+    /* /CS: active */
+    SPI_CS_LOW();
+
+    /* Send command 0x05: Read status register */
+    SPIHS1_Send(0x05);
+    sta = SPIHS1_Send(0x00);
+    
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+
+    /* Return the status register value */
+    return sta;
+}
+
+/**
+  * @brief  Write SPI flash status register.
+  * @param  spi is the base address of SPI module.
+  * @param  u32Value is the value attempt to write to status register.
+  * @return None.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+void SpiFlash_WriteStatusReg(uint32_t u32Value)
+{
+    /* /CS: active */
+    SPI_CS_LOW();
+    /* Send command 0x06: Write enable */
+    SPIHS1_Send(0x06);
+   
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+
+    __NOP();
+
+    /* /CS: active */
+    SPI_CS_LOW();
+    /* Send command 0x01: Write status register */
+    SPIHS1_Send(0x01);
+    /* write to status register 1 */
+    SPIHS1_Send(u32Value & 0xFF);
+    /* write to status register 2 */
+    SPIHS1_Send( (u32Value >> 8) & 0xFF);
+
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+}
+
+/**
+  * @brief  Perform SPI flash page program.
+  * @param  spi is the base address of SPI module.
+  * @param  u32StartAddress is the start address.
+  * @param  au8DataBuffer is the pointer of source data.
+  * @param  u32ByteCount is the total data count. The maximum number is 256.
+  * @return None.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+void SpiFlash_PageProgram(uint32_t u32StartAddress, uint8_t *au8DataBuffer, uint32_t u32ByteCount)
+{
+    uint32_t u32Counter;
+
+    /* /CS: active */
+    SPI_CS_LOW();
+
+    /* Send command 0x06: Write enable */
+    SPIHS1_Send(0x06);
+    
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+
+    __NOP();
+
+    /* /CS: active */
+    SPI_CS_LOW();
+
+    /* Send command 0x02: Page program */
+    SPIHS1_Send(0x02);
+    /* Send 24-bit start address */
+    SPIHS1_Send( (u32StartAddress >> 16) & 0xFF);
+    SPIHS1_Send( (u32StartAddress >> 8) & 0xFF);
+    SPIHS1_Send(u32StartAddress & 0xFF);
+
+    u32Counter = 0;
+    while(u32Counter < u32ByteCount)
+    {
+        
+        SPIHS1_Send(au8DataBuffer[u32Counter++]);
+    }
+    
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+}
+
+/**
+  * @brief  Read SPI flash memory.
+  * @param  spi is the base address of SPI module.
+  * @param  u32StartAddress is the start address.
+  * @param  au8DataBuffer is the pointer of destination buffer.
+  * @param  u32ByteCount is the total data count.
+  * @return None.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+void SpiFlash_ReadData(uint32_t u32StartAddress, uint8_t *au8DataBuffer, uint32_t u32ByteCount)
+{
+    uint32_t u32RxCounter, u32TxCounter;
+
+    /* /CS: active */
+    SPI_CS_LOW();
+
+    /* Send command 0x03: Read data */
+    SPIHS1_Send(0x03);
+    /* Send 24-bit start address */
+    SPIHS1_Send( (u32StartAddress >> 16) & 0xFF);
+    SPIHS1_Send( (u32StartAddress >> 8) & 0xFF);
+    SPIHS1_Send(u32StartAddress & 0xFF);
+    
+	for(u32RxCounter=0;u32RxCounter<u32ByteCount;u32RxCounter++)
+	{
+		
+		au8DataBuffer[u32RxCounter] = SPIHS1_Send(0x00);
+	}
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+}
+
+/**
+  * @brief  Fast Read SPI flash memory.
+  * @param  spi is the base address of SPI module.
+  * @param  u32StartAddress is the start address.
+  * @param  au8DataBuffer is the pointer of destination buffer.
+  * @param  u32ByteCount is the total data count.
+  * @return None.
+  * @note   Before calling this function, the transaction length (data width) must be configured as 8 bits.
+  */
+void SpiFlash_FastReadData(uint32_t u32StartAddress, uint8_t *au8DataBuffer, uint32_t u32ByteCount)
+{
+    uint32_t u32RxCounter, u32TxCounter;
+
+    /* /CS: active */
+    SPI_CS_LOW();
+
+    /* Send command 0x0B: Read data */
+    SPIHS1_Send(0x0B);
+    /* Send 24-bit start address */
+    SPIHS1_Send( (u32StartAddress >> 16) & 0xFF);
+    SPIHS1_Send( (u32StartAddress >> 8) & 0xFF);
+    SPIHS1_Send(u32StartAddress & 0xFF);
+    SPIHS1_Send(0x00);//dummy
+	for(u32RxCounter=0;u32RxCounter<u32ByteCount;u32RxCounter++)
+	{
+		
+		au8DataBuffer[u32RxCounter] = SPIHS1_Send(0x00);
+	}
+    /* /CS: inactive */
+    SPI_CS_HIGH();
+}
 
