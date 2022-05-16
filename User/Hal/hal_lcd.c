@@ -11,7 +11,6 @@
 
 /* Includes ---------------------------------------------*/
 #include "hal_flash.h"
-#include "drv_flash.h"
 #include "hal_lcd.h"
 /* Private typedef --------------------------------------*/
 /* Private define ---------------------------------------*/
@@ -24,7 +23,7 @@
 LCDB_Typedef Lcdb;
 static lcd_isr_callback_t lcd_isr_callback = NULL;
 static uint8_t lcd_interrupt_cnt;
-uint8_t spihs1dmacount;
+static uint8_t spihs1dmacount;
 static uint16_t backcolor;
 
 void Hal_Lcd_Init(void )
@@ -169,23 +168,21 @@ void Hal_Lcd_Show_Picture(uint8_t picIndex, lcd_isr_callback_t callback )
 	
 	//SPI->SPIM = _0080_SPI_START_TRG_ON | _0040_SPI_RECEPTION_TRANSMISSION | _0000_SPI_MSB | _0000_SPI_LENGTH_8;
 	
-	//Set_Position(0,LCD_W-1,0,LCD_H-1);
-	
 //	SPIHS1->SPIM1 &= ~_0010_SPI_LSB;
 	SPIHS1->SPIM1 &= ~_0004_SPI_LENGTH_16;
 	SPIHS1->SPIM1 &= ~_0002_SPI_CONTINOUS_RECEPTION;
 	SPIHS1->SPIM1 |= _0040_SPI_RECEPTION_TRANSMISSION;
 	
 	 /* /CS: active */
-    SPI_CS_LOW();
-
+    Hal_Spi_Start();    
     /* Send command 0x0B: Read data */
-    SPIHS1_Send(0x0B);
+    //SPIHS1_Send(0x0B);
+    Hal_Spi_Tx_Single_With_Blocking(0x0B);
     /* Send 24-bit start address */
-    SPIHS1_Send( (addr >> 16) & 0xFF);
-    SPIHS1_Send( (addr >> 8) & 0xFF);
-    SPIHS1_Send(addr & 0xFF);
-    SPIHS1_Send(0xff);//dummy
+    Hal_Spi_Tx_Single_With_Blocking( (addr >> 16) & 0xFF);
+    Hal_Spi_Tx_Single_With_Blocking( (addr >> 8) & 0xFF);
+    Hal_Spi_Tx_Single_With_Blocking(addr & 0xFF);
+    Hal_Spi_Tx_Single_With_Blocking(0xff);//dummy
 	
 	LCD_CS_LOW();
 
@@ -195,9 +192,8 @@ void Hal_Lcd_Show_Picture(uint8_t picIndex, lcd_isr_callback_t callback )
 	
 	LCD_DC_HIGH();
 	
-//	SPIHS1->SPIM1 |= _0010_SPI_LSB;
 	SPIHS1->SPIM1 |= _0004_SPI_LENGTH_16;
-//	SPIHS1->SPIM1 |= _0002_SPI_CONTINOUS_RECEPTION;
+
 	SPIHS1->SPIM1 &= ~_0040_SPI_RECEPTION_TRANSMISSION;
 	
     DMAVEC->VEC[DMA_VECTOR_SPIHS1] = SPI_DMA_CHANNEL;
@@ -211,24 +207,16 @@ void Hal_Lcd_Show_Picture(uint8_t picIndex, lcd_isr_callback_t callback )
     DMAVEC->CTRL[SPI_DMA_CHANNEL].DMSAR = (uint32_t)(&SPIHS1->SDRI1);
     DMAVEC->CTRL[SPI_DMA_CHANNEL].DMDAR = (uint32_t)((uint16_t*)&LCDB->LBDATA);
 	
-//	DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMACR = (DMA_SIZE_HALF << CTRL_DMACR_SZ_Pos)  | (0<<CTRL_DMACR_CHNE_Pos) | (0 << CTRL_DMACR_RPTINT_Pos) |
-//                                        (0 << CTRL_DMACR_DAMOD_Pos)  | (0 << CTRL_DMACR_SAMOD_Pos) |
-//                                        (0 << CTRL_DMACR_RPTSEL_Pos)| (DMA_MODE_NORMAL << CTRL_DMACR_MODE_Pos);
-//    DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMBLS = 1;
-//    DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMACT = (LCD_W*LCD_H)/2;
-//    DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMRLD = (LCD_W*LCD_H)/2;
-//    DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMSAR = (uint32_t)&spi_dma_dummy;
-//    DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMDAR = (uint32_t)(&SPIHS1->SDRO1);
-	
     /* init DMA registers */
     CGC->PER1   |= CGC_PER1_DMAEN_Msk;
     DMA->DMABAR  = DMAVEC_BASE;
 	DMA_Enable(DMA_VECTOR_SPIHS1);
 	spihs1dmacount = 0;//block 0
 	
-	//SPI->SPIM = _0080_SPI_START_TRG_ON | _0000_SPI_MSB | _0000_SPI_LENGTH_8 ;//| _0008_SPI_BUFFER_EMPTY;//_0040_SPI_RECEPTION_TRANSMISSION | 
 	dummy = SPIHS1->SDRI1;
-//	SPIHS1->SDRO1 = 0xffff;
+
+    lcd_isr_callback = callback;
+
 	
 	INTC_ClearPendingIRQ(SPI1_IRQn);
 	INTC_EnableIRQ(SPI1_IRQn);
@@ -261,27 +249,28 @@ void Hal_Lcd_Clr_Isr_Handler(void )
 
 void Hal_Lcd_Gif_Isr_Handler(void)
 {
-    if(++spihs1dmacount==1)
+    volatile uint8_t sio_dummy;
+    
+	if(++spihs1dmacount==1)
 	{
 		DMAVEC->CTRL[SPI_DMA_CHANNEL].DMACT = (LCD_W*LCD_H)/2-1;
-//		DMAVEC->CTRL[SPI_DMA_CHANNEL+1].DMACT = (LCD_W*LCD_H)/2-1;
 		
 		DMA_Enable(DMA_VECTOR_SPIHS1);
-//		sio_dummy = SPIHS1->SDRI1;
-//		DMA->DMAIF2  |= 1<<(DMA_VECTOR_SPIHS1%8);
 		LCDB->LBDATA = SPIHS1->SDRI1;
-//		SPIHS1->SDRO1 = 0xffff;
 	}
 	else
 	{
 		LCD_CS_HIGH();
-		SPI_CS_HIGH();
-		INTC_DisableIRQ(SPI1_IRQn);
-//		SPIHS1->SPIM1 &= ~_0002_SPI_CONTINOUS_RECEPTION;
+        Hal_Spi_Cs_Set();
 
+        if(lcd_isr_callback != NULL)
+        {
+            lcd_isr_callback();
+        }
+        
+		INTC_DisableIRQ(SPI1_IRQn);
 	}
 
-	//INTC_ClearPendingIRQ(SPI1_IRQn);
 }
 
 
