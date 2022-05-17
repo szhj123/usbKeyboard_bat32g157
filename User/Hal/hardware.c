@@ -37,17 +37,6 @@ void Clk_Init(void )
     SystemCoreClock = 64000000;
 }
 
-void Gpio_Led_Init(void )
-{
-    //LED TEST1:
-    PORT_Init(PORTD, PIN6, OUTPUT);
-    PORT_Init(PORTD, PIN7, OUTPUT);
-    PORT_Init(PORTD, PIN8, OUTPUT);
-    PORT_Init(PORTD, PIN9, OUTPUT);
-    PORT_Init(PORTD, PIN10, OUTPUT);
-    PORT_Init(PORTD, PIN11, OUTPUT);
-}
-
 void Tim4_Channel0_Init(void )
 {    
     CGC->PER0 |= CGC_PER0_TM40EN_Msk;    /* enables input clock supply */

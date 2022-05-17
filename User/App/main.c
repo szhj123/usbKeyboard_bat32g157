@@ -13,6 +13,8 @@
 #include "hardware.h"
 #include "drv_timer.h"
 
+#include "drv_uart.h"
+#include "drv_flash.h"
 #include "app_lcd.h"
 #include "app_led.h"
 /* Private typedef --------------------------------------*/
@@ -27,7 +29,9 @@ int main (void)
     
     Drv_Timer_Init();
 
-    Drv_Flash_Init();
+    Drv_Uart_Init();
+
+    Drv_Spi_Flash_Init();
 
     App_Lcd_Init();
 

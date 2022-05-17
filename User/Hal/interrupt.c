@@ -12,7 +12,9 @@
 /* Includes ---------------------------------------------*/
 #include "hardware.h"
 #include "drv_timer.h"
+#include "hal_flash.h"
 #include "hal_lcd.h"
+#include "hal_uart.h"
 /* Private typedef --------------------------------------*/
 /* Private define ---------------------------------------*/
 /* Private macro ----------------------------------------*/
@@ -20,6 +22,7 @@
 void IRQ18_Handler(void) __attribute__((alias("tm40_channel0_interrupt")));
 void IRQ15_Handler(void) __attribute__((alias("lcdb_interrupt")));
 void IRQ12_Handler(void) __attribute__((alias("spi1_interrupt")));
+void IRQ08_Handler(void) __attribute__((alias("uart0_interrupt_receive")));
 
 /* Private variables ------------------------------------*/
 
@@ -42,5 +45,16 @@ void spi1_interrupt(void )
    INTC_ClearPendingIRQ(SPI1_IRQn);
 
    Hal_Lcd_Gif_Isr_Handler();
+
+   Hal_Spi_Tx_Isr_Handler();
+
+   Hal_Spi_Rx_Isr_Handler();
+}
+
+void uart0_interrupt_receive(void )
+{
+    INTC_ClearPendingIRQ(SR0_IRQn);
+
+    Hal_Uart_Rx_Isr_Handler();
 }
 

@@ -22,6 +22,7 @@
 /* Private variables ------------------------------------*/
 LCDB_Typedef Lcdb;
 static lcd_isr_callback_t lcd_isr_callback = NULL;
+static uint8_t lcdRxReqFlag;
 static uint8_t lcd_interrupt_cnt;
 static uint8_t spihs1dmacount;
 static uint16_t backcolor;
@@ -157,6 +158,8 @@ void Hal_Lcd_Set_BgColor(uint16_t color, lcd_isr_callback_t callback )
 
     lcd_interrupt_cnt = 0;
 
+    lcdRxReqFlag = 1;
+
     LCDB->LBDATA = color;
 }
 
@@ -211,8 +214,10 @@ void Hal_Lcd_Show_Picture(uint8_t picIndex, lcd_isr_callback_t callback )
     CGC->PER1   |= CGC_PER1_DMAEN_Msk;
     DMA->DMABAR  = DMAVEC_BASE;
 	DMA_Enable(DMA_VECTOR_SPIHS1);
+    
 	spihs1dmacount = 0;//block 0
-	
+	lcdRxReqFlag = 1;
+    
 	dummy = SPIHS1->SDRI1;
 
     lcd_isr_callback = callback;
@@ -224,53 +229,61 @@ void Hal_Lcd_Show_Picture(uint8_t picIndex, lcd_isr_callback_t callback )
 
 void Hal_Lcd_Clr_Isr_Handler(void )
 {
-    /* Start user code. Do not edit comment generated here */
-//	int_lcdb_flag = 1;
-	if(++lcd_interrupt_cnt==1)
-	{
-		DMAVEC->CTRL[DMA_CTRL_DATA_LCDB].DMACT = (LCD_W*LCD_H)/2-1;
-		DMA_Enable(DMA_VECTOR_LCDB);
-		LCDB->LBDATA = backcolor;
-	}
-	else
-	{
-		LCD_CS_HIGH();
+    if(lcdRxReqFlag)
+    {
+    	if(++lcd_interrupt_cnt==1)
+    	{
+    		DMAVEC->CTRL[DMA_CTRL_DATA_LCDB].DMACT = (LCD_W*LCD_H)/2-1;
+    		DMA_Enable(DMA_VECTOR_LCDB);
+    		LCDB->LBDATA = backcolor;
+    	}
+    	else
+    	{
+            lcdRxReqFlag = 0;
+            
+    		LCD_CS_HIGH();
 
-        lcd_interrupt_cnt = 0;
+            lcd_interrupt_cnt = 0;
 
-        if(lcd_isr_callback != NULL)
-        {
-            lcd_isr_callback();
-        }
-		
-		LCDB_Stop();
-	}
+            if(lcd_isr_callback != NULL)
+            {
+                lcd_isr_callback();
+            }
+    		
+    		LCDB_Stop();
+    	}
+    }
 }
 
 void Hal_Lcd_Gif_Isr_Handler(void)
 {
     volatile uint8_t sio_dummy;
-    
-	if(++spihs1dmacount==1)
-	{
-		DMAVEC->CTRL[SPI_DMA_CHANNEL].DMACT = (LCD_W*LCD_H)/2-1;
-		
-		DMA_Enable(DMA_VECTOR_SPIHS1);
-		LCDB->LBDATA = SPIHS1->SDRI1;
-	}
-	else
-	{
-		LCD_CS_HIGH();
-        Hal_Spi_Cs_Set();
 
-        if(lcd_isr_callback != NULL)
-        {
-            lcd_isr_callback();
-        }
-        
-		INTC_DisableIRQ(SPI1_IRQn);
-	}
+    if(lcdRxReqFlag)
+    {
+    	if(++spihs1dmacount==1)
+    	{
+    		DMAVEC->CTRL[SPI_DMA_CHANNEL].DMACT = (LCD_W*LCD_H)/2-1;
+    		
+    		DMA_Enable(DMA_VECTOR_SPIHS1);
+    		LCDB->LBDATA = SPIHS1->SDRI1;
+    	}
+    	else
+    	{
+            lcdRxReqFlag = 0;
+            
+    		LCD_CS_HIGH();
+            
+            Hal_Spi_Cs_Set();
 
+            if(lcd_isr_callback != NULL)
+            {
+                lcd_isr_callback();
+            }
+            
+    		INTC_DisableIRQ(SPI1_IRQn);
+    	}
+    }
 }
 
 

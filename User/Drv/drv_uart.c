@@ -1,5 +1,5 @@
 /********************************************************
-* @file       hal_led.c
+* @file       drv_uart.c
 * @author     szhj13
 * @version    V1.0
 * @date       2022-05-18
@@ -10,38 +10,36 @@
 **********************************************************/
 
 /* Includes ---------------------------------------------*/
-#include "hal_led.h"
+#include "hardware.h"
+#include "drv_timer.h"
+#include "drv_flash.h"
+#include "drv_uart.h"
 /* Private typedef --------------------------------------*/
 /* Private define ---------------------------------------*/
 /* Private macro ----------------------------------------*/
+/* Private function -------------------------------------*/
+static void Drv_Uart_Rx_Handler(uint8_t rxData );
 /* Private variables ------------------------------------*/
-
-void Hal_Led_Init(void )
+void uart_test(void *arg )
 {
-    PORT_Init(PORTD, PIN11, OUTPUT);
-    PORT_Init(PORTD, PIN10, OUTPUT);
+    printf("hello world\n");
 }
 
-void Hal_Led_Set_Off(uint8_t port, uint8_t pin )
+void Drv_Uart_Init(void )
 {
-    PORT_SetBit((PORT_TypeDef)port, (PIN_TypeDef)pin);
+    Hal_Uart_Init();
+
+    Hal_Uart_Register_Rx_Callback(Drv_Uart_Rx_Handler);
+
+    Drv_Timer_Register_Period(uart_test, 0, 1000, NULL);
 }
 
-void Hal_Led_Set_On(uint8_t port, uint8_t pin )
+static void Drv_Uart_Rx_Handler(uint8_t rxData )
 {
-    PORT_ClrBit((PORT_TypeDef)port, (PIN_TypeDef)pin);
-}
+    static uint32_t addr;
+    
+    //Drv_Spi_Write_Page(addr, (uint8_t *)&rxData, 1);
 
-uint8_t Hal_Led_Get_State(uint8_t port, uint8_t pin )
-{
-    if(PORT_GetBit((PORT_TypeDef )port, (PIN_TypeDef )pin ))
-    {
-        return LED_OFF;
-    }
-    else
-    {
-        return LED_ON;
-    }
+    addr++;
 }
-
 

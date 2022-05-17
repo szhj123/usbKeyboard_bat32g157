@@ -624,6 +624,7 @@ typedef enum
   */
 
 /* ToDo: You can allocate the TXD0 to any desired pins with PxxCFG register */
+#if 0
 #define TXD0_PORT_SETTING() do{ \
         PORT->PD11CFG = PTCFG_TXD0;  /* allocate TXD0 to PD11 */ \
         PORT->PSETD =  (1 << 11);    /* PD11 output high level */ \
@@ -631,14 +632,32 @@ typedef enum
         PORT->POMD &= ~(1 << 11);    /* PD11 is normal output mode */ \
         PORT->PMCD &= ~(1 << 11);    /* PD11 digital function */ \
 }while(0)
+#else
+#define TXD0_PORT_SETTING() do{ \
+        PORT->PD08CFG = PTCFG_TXD0;  /* allocate TXD0 to PD08 */ \
+        PORT->PSETD =  (1 << 8);    /* PD11 output high level */ \
+        PORT->PMD  &= ~(1 << 8);    /* PD11 is used as TXD0 output */ \
+        PORT->POMD &= ~(1 << 8);    /* PD11 is normal output mode */ \
+        PORT->PMCD &= ~(1 << 8);    /* PD11 digital function */ \
+}while(0)
+
+#endif 
 
 /* ToDo: You can allocate the RXD0 to any desired pins with RXD0PCFG register */
+#if 0
 #define RXD0_PORT_SETTING() do{ \
         PORT->RXD0PCFG = PTCFG_PD10;/* allocate RXD0 to PD10 */ \
         PORT->PMD  |=  (1 << 10);   /* PD10 is used as RXD0 input */ \
         PORT->PMCD &= ~(1 << 10);   /* PD10 digital function */ \
 }while(0)
+#else
+#define RXD0_PORT_SETTING() do{ \
+        PORT->RXD0PCFG = PTCFG_PD07;/* allocate RXD0 to PD07 */ \
+        PORT->PMD  |=  (1 << 7);   /* PD10 is used as RXD0 input */ \
+        PORT->PMCD &= ~(1 << 7);   /* PD10 digital function */ \
+}while(0)
 
+#endif 
 /**
   * @brief SPI00 Port Setting（Alternative to any port)
   */

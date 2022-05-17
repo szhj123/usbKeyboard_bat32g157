@@ -1,5 +1,5 @@
 /********************************************************
-* @file       hal_led.c
+* @file       hal_uart.c
 * @author     szhj13
 * @version    V1.0
 * @date       2022-05-18
@@ -10,38 +10,39 @@
 **********************************************************/
 
 /* Includes ---------------------------------------------*/
-#include "hal_led.h"
+#include "hal_uart.h"
 /* Private typedef --------------------------------------*/
 /* Private define ---------------------------------------*/
 /* Private macro ----------------------------------------*/
+/* Private function -------------------------------------*/
 /* Private variables ------------------------------------*/
+uart_isr_callback_t uart_rx_callback = NULL;
 
-void Hal_Led_Init(void )
+void Hal_Uart_Init(void )
 {
-    PORT_Init(PORTD, PIN11, OUTPUT);
-    PORT_Init(PORTD, PIN10, OUTPUT);
+    SystemCoreClock = 64000000;
+
+    UART0_Init(SystemCoreClock, 115200);
+
+    //INTC_EnableIRQ(ST1_IRQn);  
+    INTC_DisableIRQ(ST0_IRQn);
+    INTC_EnableIRQ(SR0_IRQn);       
 }
 
-void Hal_Led_Set_Off(uint8_t port, uint8_t pin )
+void Hal_Uart_Register_Rx_Callback(uart_isr_callback_t callback )
 {
-    PORT_SetBit((PORT_TypeDef)port, (PIN_TypeDef)pin);
+    uart_rx_callback = callback;
 }
 
-void Hal_Led_Set_On(uint8_t port, uint8_t pin )
+void Hal_Uart_Rx_Isr_Handler(void )
 {
-    PORT_ClrBit((PORT_TypeDef)port, (PIN_TypeDef)pin);
-}
+    volatile uint8_t rx_data;
 
-uint8_t Hal_Led_Get_State(uint8_t port, uint8_t pin )
-{
-    if(PORT_GetBit((PORT_TypeDef )port, (PIN_TypeDef )pin ))
+    rx_data = SCI0->RXD0;
+
+    if(uart_rx_callback != NULL)
     {
-        return LED_OFF;
-    }
-    else
-    {
-        return LED_ON;
+        uart_rx_callback(rx_data);
     }
 }
-
 
