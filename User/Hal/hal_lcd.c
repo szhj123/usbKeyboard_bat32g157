@@ -15,7 +15,8 @@
 /* Private typedef --------------------------------------*/
 /* Private define ---------------------------------------*/
 #define DMA_CTRL_DATA_LCDB 0
-#define SPI_FLASH_ADDR 0xE00000
+//#define SPI_FLASH_ADDR 0xE00000
+#define SPI_FLASH_ADDR 0
 
 /* Private macro ----------------------------------------*/
 /* Private function -------------------------------------*/
@@ -167,7 +168,7 @@ void Hal_Lcd_Show_Picture(uint8_t picIndex, lcd_isr_callback_t callback )
 {
     uint16_t  dummy;
 	
-	uint32_t addr = SPI_FLASH_ADDR+LCD_W*LCD_H*2*picIndex;//SPI_FLASH_ADDR+0x20000*imagenum;
+	uint32_t addr = SPI_FLASH_ADDR + picIndex * PIC_MAX_SIZE;//SPI_FLASH_ADDR+0x20000*imagenum;
 	
 	//SPI->SPIM = _0080_SPI_START_TRG_ON | _0040_SPI_RECEPTION_TRANSMISSION | _0000_SPI_MSB | _0000_SPI_LENGTH_8;
 	

@@ -11,6 +11,8 @@
 
 /* Includes ---------------------------------------------*/
 #include "drv_timer.h"
+#include "drv_flash.h"
+#include "pic.h"
 #include "app_lcd.h"
 /* Private typedef --------------------------------------*/
 
@@ -28,7 +30,8 @@ void App_Lcd_Init(void )
 {
     Drv_Lcd_Init();    
 
-    //App_Lcd_Clr_Set(0x07e0);
+    App_Lcd_Save_Picture(21);
+
     App_Lcd_Gif_Set();
 }
 
@@ -76,7 +79,7 @@ void App_Lcd_Gif_Set(void )
 {
     lcdInfo.funcState = FUNC_ENTRY;
     lcdInfo.lcdPicIndex = 0;
-    lcdInfo.lcdPicNum = 4;
+    lcdInfo.lcdPicNum = 22;
     lcdInfo.handler = App_Lcd_Gif_Handler;
 }
 
@@ -143,6 +146,28 @@ void App_Lcd_Normal_Handler(void )
             break;
         }
         default: break;
+    }
+}
+
+void App_Lcd_Save_Picture(uint16_t picIndex )
+{
+    uint32_t flashAddr = picIndex * PIC_MAX_SIZE;
+
+    App_Lcd_Erase_Picture(picIndex);
+        
+    Drv_Spi_Write(flashAddr, (uint8_t *)gImage_pic1, sizeof(gImage_pic1));
+}
+
+void App_Lcd_Erase_Picture(uint16_t picIndex )
+{
+    uint8_t i;
+    uint32_t flashAddr = picIndex * PIC_MAX_SIZE;
+    
+    for(i=0;i<40;i++)
+    {
+        Drv_Spi_Sector_Erase(flashAddr);
+
+        flashAddr += ERASE_SECTOR_SIZE;
     }
 }
 

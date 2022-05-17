@@ -30,12 +30,12 @@ typedef struct
 void Drv_Spi_Flash_Init(void );
 void Drv_Spi_Read_Jedec_Id(void );
 void Drv_Spi_Sector_Erase(uint32_t addr );
-void Drv_Spi_Write(uint32_t addr, uint8_t *buf, uint16_t length );
+void Drv_Spi_Write(uint32_t addr, uint8_t *buf, uint32_t length );
 void Drv_Spi_Write_With_Interrupt(uint32_t addr, uint8_t *buf, uint16_t length, spi1_tx_end_callback_t callback );
 void Drv_Spi_Write_With_DMA(uint32_t addr, uint8_t *buf, uint16_t length, spi1_tx_end_callback_t callback );
-
+void Drv_Spi_Write_Page(uint32_t addr, uint8_t *buf, uint16_t length );
 void Drv_Spi_Read_With_Blocking(uint32_t addr, uint8_t *buf, uint16_t length );
-void Drv_Spi_Read_With_DMA(uint32_t addr, uint8_t *buf, uint16_t length, spi1_rx_end_callback_t callback );
+void Drv_Spi_Read_With_DMA(uint32_t addr, uint8_t *buf, uint32_t length, spi1_rx_end_callback_t callback );
 
 #endif 
 

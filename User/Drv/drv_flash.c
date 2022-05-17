@@ -27,8 +27,13 @@ static flash_id_t flash_id;
 static uint8_t spi_tx_end_flag;
 static uint8_t spi_rx_end_flag;
 
+static uint8_t rBuf[1024];
+
 void Drv_Spi_Flash_Init(void )
 {
+    uint8_t i;
+    uint16_t j;
+    uint32_t addr = 0;
     Hal_Spi_Init();
 
     Drv_Spi_Read_Jedec_Id();
@@ -118,7 +123,7 @@ void Drv_Spi_Write_Page(uint32_t addr, uint8_t *buf, uint16_t length )
     Drv_Spi_Wait_Bus_Idle();
 }
 
-void Drv_Spi_Write(uint32_t addr, uint8_t *buf, uint16_t length )
+void Drv_Spi_Write(uint32_t addr, uint8_t *buf, uint32_t length )
 {   
     uint32_t pageNum = 0;
     uint32_t lastPageRemainByte = 0;
@@ -211,7 +216,7 @@ void Drv_Spi_Read_With_Blocking(uint32_t addr, uint8_t *buf, uint16_t length )
     Hal_Spi_Stop();
 }
 
-void Drv_Spi_Read_With_DMA(uint32_t addr, uint8_t *buf, uint16_t length, spi1_rx_end_callback_t callback )
+void Drv_Spi_Read_With_DMA(uint32_t addr, uint8_t *buf, uint32_t length, spi1_rx_end_callback_t callback )
 {
     Hal_Spi_Start();
     
@@ -240,5 +245,6 @@ static void Drv_Spi_Tx_End_Callback(void )
 static void Drv_Spi_Rx_End_Callback(void ) 
 {
     spi_rx_end_flag = 1;
+
 }
 

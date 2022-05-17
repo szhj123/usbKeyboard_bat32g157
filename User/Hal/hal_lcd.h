@@ -6,6 +6,9 @@
 #define LCD_W 320u
 #define LCD_H 240u
 
+#define PIC_MAX_SIZE        (163840u)
+
+
 typedef void (*lcd_isr_callback_t)(void );
 
 

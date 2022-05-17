@@ -3,6 +3,7 @@
 
 #include "drv_lcd.h"
 
+
 typedef enum
 {
     FUNC_ENTRY = 0,
@@ -28,6 +29,8 @@ void App_Lcd_Gif_Set(void );
 void App_Lcd_Gif_Handler(void );
 void App_Lcd_Normal_Set(void );
 void App_Lcd_Normal_Handler(void );
+void App_Lcd_Erase_Picture(uint16_t picIndex );
+void App_Lcd_Save_Picture(uint16_t picIndex );
 
 #endif 
 
