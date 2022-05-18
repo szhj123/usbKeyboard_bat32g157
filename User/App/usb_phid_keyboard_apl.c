@@ -24,6 +24,7 @@
 #define DATA_LEN                (8)
 #define HID_DESCRIPTOR_SIZE     (9)
 #define REPORT_DESCRIPTOR_SIZE  (76)
+#define REPORT_DESCRIPTOR_CUSTOM_SIZE (32)
 #define HID_DESCRIPTOR_INDEX    (18)
 
 /*******************************************************************************
@@ -143,7 +144,16 @@ static void Usb_Event_Handler(void *arg )
                     {
                         /* Send Report descriptor */
                         ctrl.type = USB_REQUEST;
-                        USB_Write (&ctrl, (uint8_t *)g_apl_report, REPORT_DESCRIPTOR_SIZE);
+
+                        if((uint8_t )ctrl.setup.index == 0)
+                        {
+                            USB_Write (&ctrl, (uint8_t *)g_apl_report, REPORT_DESCRIPTOR_SIZE);
+                        }
+                        else if((uint8_t )ctrl.setup.index == 1)
+                        {
+                            USB_Write (&ctrl, (uint8_t *)g_apl_hid_report, REPORT_DESCRIPTOR_CUSTOM_SIZE);
+
+                        }
                     }
                     else if (USB_GET_HID_DESCRIPTOR == ctrl.setup.value)
                     {

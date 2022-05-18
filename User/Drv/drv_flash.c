@@ -31,9 +31,6 @@ static uint8_t rBuf[1024];
 
 void Drv_Spi_Flash_Init(void )
 {
-    uint8_t i;
-    uint16_t j;
-    uint32_t addr = 0;
     Hal_Spi_Init();
 
     Drv_Spi_Read_Jedec_Id();

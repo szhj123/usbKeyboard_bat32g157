@@ -62,27 +62,20 @@ const uint8_t g_apl_device[] =
 /************************************************************
  *  Configuration Descriptor                                *
  ************************************************************/
-#if OPERATION_MODE == USB_ECHO
-    #define     CD_LEN      (34+7)  /* Configuration Descriptor Length */
-#else
-    #define     CD_LEN      (34)    /* Configuration Descriptor Length */
-#endif
+
+#define     CD_LEN      (66)    /* Configuration Descriptor Length */
+
 const uint8_t g_apl_configuration[CD_LEN + (CD_LEN % 2)] =
 {
     USB_CD_BLENGTH,                                             /*  0:bLength */
     USB_DT_CONFIGURATION,                                       /*  1:bDescriptorType */
-    (uint8_t) (CD_LEN % 256),                                   /*  2:wTotalLength(L) */
-    (uint8_t) (CD_LEN / 256),                                   /*  3:wTotalLength(H) */
-    1,                                                          /*  4:bNumInterfaces */
+    (uint8_t) (66 % 256),                                       /*  2:wTotalLength(L) */
+    (uint8_t) (66 / 256),                                       /*  3:wTotalLength(H) */
+    2,                                                          /*  4:bNumInterfaces */
     1,                                                          /*  5:bConfigurationValue */
     4,                                                          /*  6:iConfiguration */
-    #if OPERATION_MODE == USB_ECHO
-    /* Not support RemoteWakeUp */
-    (uint8_t) (USB_CF_RESERVED | USB_CF_SELFP),                 /*  7:bmAttributes */
-    #else   /* OPERATION_MODE == USB_ECHO */
     /* Support RemoteWakeUp */
     (uint8_t) (USB_CF_RESERVED | USB_CF_SELFP | USB_CF_RWUPON), /*  7:bmAttributes */
-    #endif  /* OPERATION_MODE == USB_ECHO */
     (uint8_t) (100 / 2),                                        /*  8:bMaxPower (2mA unit) */
 
     /* Interface Descriptor */
@@ -90,10 +83,10 @@ const uint8_t g_apl_configuration[CD_LEN + (CD_LEN % 2)] =
     USB_DT_INTERFACE,                                           /*  1:bDescriptor */
     0,                                                          /*  2:bInterfaceNumber */
     0,                                                          /*  3:bAlternateSetting */
-    NUM_EP,                                                     /*  4:bNumEndpoints */
+    1,                                                          /*  4:bNumEndpoints */
     USB_IFCLS_HID,                                              /*  5:bInterfaceClass(HID) */
     USB_IFSUB_NOBOOT,                                           /*  6:bInterfaceSubClass(NonBOOT) */
-    USB_IFPROTOCOL,                                             /*  7:bInterfaceProtocol */
+    0x01,                                                       /*  7:bInterfaceProtocol */
     0,                                                          /*  8:iInterface */
 
     /* HID Descriptor */
@@ -104,7 +97,7 @@ const uint8_t g_apl_configuration[CD_LEN + (CD_LEN % 2)] =
     0x00,                                                       /*  4:bCountryCode */
     0x01,                                                       /*  5:bNumDescriptors */
     0x22,                                                       /*  6:bDescriptorType */
-    ITEM_LEN,                                                   /*  7:wItemLength(L) */
+    76,                                                         /*  7:wItemLength(L) */
     0x00,                                                       /*  8:wItemLength(H) */
 
     /* Endpoint Descriptor 0 */
@@ -115,16 +108,42 @@ const uint8_t g_apl_configuration[CD_LEN + (CD_LEN % 2)] =
     MXPS,                                                       /*  4:wMaxPacketSize_lo */
     0,                                                          /*  5:wMaxPacketSize_hi */
     0x0A,                                                       /*  6:bInterval */
-    #if OPERATION_MODE == USB_ECHO
+    
+    USB_ID_BLENGTH,                                             /*  0:bLength */
+    USB_DT_INTERFACE,                                           /*  1:bDescriptor */
+    1,                                                          /*  2:bInterfaceNumber */
+    0,                                                          /*  3:bAlternateSetting */
+    2,                                                          /*  4:bNumEndpoints */
+    USB_IFCLS_HID,                                              /*  5:bInterfaceClass(HID) */
+    USB_IFSUB_NOBOOT,                                           /*  6:bInterfaceSubClass(NonBOOT) */
+    0,                                                          /*  7:bInterfaceProtocol */
+    0,                                                          /*  8:iInterface */
+    
+    9,                                                          /*  0:bLength */
+    USB_DT_TYPE_HIDDESCRIPTOR,                                  /*  1:bDescriptor */
+    0x00,                                                       /*  2:HID Ver */
+    0x01,                                                       /*  3:HID Ver */
+    0x00,                                                       /*  4:bCountryCode */
+    0x01,                                                       /*  5:bNumDescriptors */
+    0x22,                                                       /*  6:bDescriptorType */
+    34,                                                         /*  7:wItemLength(L) */
+    0x00,                                                       /*  8:wItemLength(H) */
+    /* Endpoint Descriptor 0 */
+    USB_ED_BLENGTH,                                             /*  0:bLength */
+    USB_DT_ENDPOINT,                                            /*  1:bDescriptorType */
+    (uint8_t) (USB_EP_IN | USB_EP2),                            /*  2:bEndpointAddress */
+    USB_EP_INT,                                                 /*  3:bmAttribute */
+    64,                                                         /*  4:wMaxPacketSize_lo */
+    0,                                                          /*  5:wMaxPacketSize_hi */
+    0x0A,                                                       /*  6:bInterval */
     /* Endpoint Descriptor 1 */
     USB_ED_BLENGTH,                                             /*  0:bLength */
     USB_DT_ENDPOINT,                                            /*  1:bDescriptorType */
-    (uint8_t) (USB_EP_OUT | USB_EP2),                           /*  2:bEndpointAddress */
+    (uint8_t) (USB_EP_OUT | USB_EP3),                           /*  2:bEndpointAddress */
     USB_EP_INT,                                                 /*  3:bmAttribute */
-    MXPS,                                                       /*  4:wMaxPacketSize_lo */
+    64,                                                         /*  4:wMaxPacketSize_lo */
     0,                                                          /*  5:wMaxPacketSize_hi */
     0x0A,                                                       /*  6:bInterval */
-    #endif  /* OPERATION_MODE == USB_ECHO */
 };
 
 /************************************************************
@@ -262,35 +281,31 @@ const uint8_t * gp_apl_string_table[] =
     gs_apl_string4,                             /* iConfiguration */
 };
 
-#if OPERATION_MODE == USB_ECHO
 /************************************************************
  *  HID Report Discriptor for Echo mode                     *
  ************************************************************/
-const uint8_t g_apl_report[] =
+const uint8_t g_apl_hid_report[] =
 {
-    0x06, 0xA0, 0xFF,                               /* Usage Page - Vendor defined*/
-    0x09, 0x00,                                     /* Usage ID within this page (Vendor defined)*/
-    0xA1, 0x01,                                     /* Collection App (Windows requires an Application Collection) */
-
-    /* *** The INPUT REPORT *** */
-    0x09, 0x00,                                     /* Usage ID within this page*/
-    0x15, 0x00,                                     /* Logical Min 0 */
-    0x26, 0xFF, 0x00,                               /* Logical Max 255 */
-    0x75, 0x08,                                     /* Size 8 Bits (Each Field will be 8bits) */
-    0x95, 0x40,                                     /* Count(Number of fields(bytes) in INPUT report) */
-    0x81, 0x02,                                     /* Input Report - type variable data */
+    0x05, 0x01,                                     /* Usage Page (Generic Desktop) */
+    0x09, 0x01,                                     /* Usage (Keyboard) */
+    0xA1, 0x01,                                     /* Collection (Application) */
+    0x09, 0x00,                                     /* Usage Page (Key Codes); */
+    0x95, 0x40,                                     /* Report Count (40) */
+    0x75, 0x08,                                     /* Report Size (8) */
+    0x15, 0x00,                                     /* Logical Minimum (0) */
+    0x25, 0xff,                                     /* Logical Maximum(255) */
+    0x81, 0x02,                                     /* Input (Data , Array)  ;Key arrays (6 bytes) */
 
     /* *** The OUTPUR REPORT *** */
     0x09, 0x00,                                     /* Usage ID within this page (Vendor defined)*/
     0x15, 0x00,                                     /* Logical Min 0 */
     0x26, 0xFF, 0x00,                               /* Logical Max 255 */
     0x75, 0x08,                                     /* Size 8 Bits (Each Field will be 8bits) */
-    0x95, 0x40,                                     /* Count(Number of fields(bytes) in OUTPUT report)*/
+    0x95, 0x40,                                     /* Count (Number of fields(bytes) in OUTPUT report) */
     0x91, 0x02,                                     /* Output Report - type variable data */
-    0xC0,                                           /* End collection */
+    0xC0,                                           /* End Collection */                                          /* End collection */
 };
 
-#else /* OPERATION_MODE == USB_ECHO */
 /************************************************************
  *  HID Report Discriptor for Keyboard                      *
  ************************************************************/
@@ -337,7 +352,6 @@ const uint8_t g_apl_report[] =
     0x91, 0x02,                                     /* Output Report - type variable data */
     0xC0,                                           /* End Collection */
 };
-#endif  /* OPERATION_MODE == USB_ECHO */
 
 /******************************************************************************
  End  Of File

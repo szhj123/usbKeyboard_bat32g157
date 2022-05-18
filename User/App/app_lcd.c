@@ -30,8 +30,6 @@ void App_Lcd_Init(void )
 {
     Drv_Lcd_Init();    
 
-    App_Lcd_Save_Picture(21);
-
     App_Lcd_Gif_Set();
 }
 
@@ -79,7 +77,7 @@ void App_Lcd_Gif_Set(void )
 {
     lcdInfo.funcState = FUNC_ENTRY;
     lcdInfo.lcdPicIndex = 0;
-    lcdInfo.lcdPicNum = 22;
+    lcdInfo.lcdPicNum = 37;
     lcdInfo.handler = App_Lcd_Gif_Handler;
 }
 

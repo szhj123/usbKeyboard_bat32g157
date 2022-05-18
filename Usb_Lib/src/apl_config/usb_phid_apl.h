@@ -47,6 +47,7 @@ extern  const   uint8_t g_apl_device[];
 extern  const   uint8_t g_apl_configuration[];
 extern  const   uint8_t *gp_apl_string_table[];
 extern  const   uint8_t g_apl_report[];
+extern  const   uint8_t g_apl_hid_report[];
 
 extern uint8_t g_remote_wakeup_enable;
 

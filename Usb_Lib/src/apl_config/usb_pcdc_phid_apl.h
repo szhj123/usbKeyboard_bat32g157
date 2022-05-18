@@ -48,7 +48,8 @@
 extern uint8_t g_apl_device[];
 extern uint8_t g_apl_configuration[];
 extern uint8_t *gp_apl_string_table[];
-extern  const   uint8_t g_apl_report[];
+extern const uint8_t g_apl_report[];
+extern const uint8_t g_apl_hid_report[];
 
 /*******************************************************************************
  Exported global functions (to be accessed by other files)
